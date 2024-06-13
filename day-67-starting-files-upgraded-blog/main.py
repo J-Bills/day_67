@@ -25,14 +25,31 @@ This will install the packages from the requirements.txt for this project.
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 Bootstrap5(app)
+ckeditor = CKEditor(app)
+
 
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
+
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
+class Post(FlaskForm):
+    title = StringField('Blog Title', validators=[DataRequired()])
+    subtitle = StringField('Blog Subtitle', validators=[DataRequired()])
+    author = StringField('Your Name', validators=[DataRequired()])
+    img_url = StringField('Blog img_url', validators=[DataRequired()])
+    body = CKEditorField('Blog Body', validators=[DataRequired()])
+    create_button = SubmitField('Create Post')
+
+    def to_dict(self):
+        dictionary = {field_name: value for (field_name,value) in self.data.items()}
+        dictionary.pop("create_button")
+        dictionary.pop("csrf_token")
+        return dictionary
 
 # CONFIGURE TABLE
 class BlogPost(db.Model):
@@ -79,13 +96,15 @@ def show_post(post_id):
 # TODO: add_new_post() to create a new blog post
 @app.route('/create-post', methods=['GET', 'POST'])
 def add_new_post():
+    form = Post()
     if request.method == 'POST':
-        form_dict = request.form.to_dict()
+        form_dict = form.to_dict()
+        form_dict['date'] = date.today()
         db.session.add(BlogPost(**form_dict))
         db.session.commit()
         return redirect(url_for('get_all_posts'))
 
-    return render_template('make-post.html')
+    return render_template('make-post.html', form=form)
 
 
 # TODO: edit_post() to change an existing blog post
@@ -122,3 +141,4 @@ def contact():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5003)
+
