@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request, jsonify
 from flask_bootstrap import Bootstrap5
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -60,15 +60,41 @@ def get_all_posts():
 @app.route('/show-post/<int:post_id>')
 def show_post(post_id):
     # TODO: Retrieve a BlogPost from the database based on the post_id
-    requested_post = "Grab the post from your database"
+    # requested_post = "Grab the post from your database"
+    requested_post = BlogPost.query.get(post_id)
+    if requested_post is None:
+        return jsonify({'error': 'Requested post not found'}, 404)
     return render_template("post.html", post=requested_post)
 
 
+
+
 # TODO: add_new_post() to create a new blog post
+@app.route('/create-post', methods=['GET', 'POST'])
+def add_new_post():
+    return render_template('make-post.html')
+
 
 # TODO: edit_post() to change an existing blog post
+@app.route('/edit-post/<int:post_id>', methods=['GET', 'POST'])
+def edit_post(post_id):
+    requested_post = BlogPost.query.get(post_id)
+    if requested_post is None:
+        return jsonify({'error': 'Requested post not found'}, 404)
+    if request.method == 'POST':
+        pass
+    return render_template("make-post.html", post=requested_post)
 
 # TODO: delete_post() to remove a blog post from the database
+
+@app.route('/delete-post/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    requested_post = BlogPost.query.get(post_id)
+    if requested_post is None:
+        return jsonify({'error': 'Requested post not found'}, 404)
+    db.session.delete(requested_post)
+    db.session.commit()
+    return redirect(url_for('get_all_posts'))
 
 # Below is the code from previous lessons. No changes needed.
 @app.route("/about")
