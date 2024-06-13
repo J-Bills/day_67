@@ -99,7 +99,8 @@ def add_new_post():
     form = Post()
     if request.method == 'POST':
         form_dict = form.to_dict()
-        form_dict['date'] = date.today()
+        curr_date = date.today().strftime("%B %d, %Y")
+        form_dict['date'] = f'{curr_date}'
         db.session.add(BlogPost(**form_dict))
         db.session.commit()
         return redirect(url_for('get_all_posts'))
@@ -113,9 +114,26 @@ def edit_post(post_id):
     requested_post = BlogPost.query.get(post_id)
     if requested_post is None:
         return jsonify({'error': 'Requested post not found'}, 404)
+
+    form = Post(
+        title=requested_post.title,
+        date=requested_post.date,
+        subtitle=requested_post.subtitle,
+        author=requested_post.author,
+        img_url=requested_post.img_url,
+        body=requested_post.body,
+    )
+
     if request.method == 'POST':
-        pass
-    return render_template("make-post.html", post=requested_post)
+        form_dict = form.to_dict()
+        requested_post.date = form_dict['date']
+        requested_post.subtitle = form_dict['subtitle']
+        requested_post.author = form_dict['author']
+        requested_post.img_url = form_dict['img_url']
+        requested_post.body = form_dict['body']
+        db.session.commit()
+        return redirect(url_for('get_all_posts'))
+    return render_template("make-post.html", form=form)
 
 # TODO: delete_post() to remove a blog post from the database
 
