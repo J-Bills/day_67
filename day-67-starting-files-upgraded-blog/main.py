@@ -44,10 +44,17 @@ class BlogPost(db.Model):
     author: Mapped[str] = mapped_column(String(250), nullable=False)
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
 
+    def to_dict(self):
+        dictionary = {column.name: getattr(self, column.name) for column in self.__table__.columns}
+        return dictionary
 
 with app.app_context():
     db.create_all()
 
+
+def to_dict(data):
+    dictionary = {key:val for (key,val) in data.items()}
+    return dictionary
 
 @app.route('/')
 def get_all_posts():
@@ -72,6 +79,12 @@ def show_post(post_id):
 # TODO: add_new_post() to create a new blog post
 @app.route('/create-post', methods=['GET', 'POST'])
 def add_new_post():
+    if request.method == 'POST':
+        form_dict = request.form.to_dict()
+        db.session.add(BlogPost(**form_dict))
+        db.session.commit()
+        return redirect(url_for('get_all_posts'))
+
     return render_template('make-post.html')
 
 
