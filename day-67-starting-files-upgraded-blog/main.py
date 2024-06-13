@@ -137,7 +137,7 @@ def edit_post(post_id):
 
 # TODO: delete_post() to remove a blog post from the database
 
-@app.route('/delete-post/<int:post_id>', methods=['DELETE'])
+@app.route('/delete-post/<int:post_id>', methods=['GET'])
 def delete_post(post_id):
     requested_post = BlogPost.query.get(post_id)
     if requested_post is None:
